@@ -7,10 +7,18 @@ static pixMap* pixMap_copy(pixMap *p);
 
 static pixMap* pixMap_init(unsigned char arrayType){
 	//initialize everything to zero except arrayType
+	pixMap* pxP;
+	pixMap newPixMap = {0, 0, 0, arrayType, 0, 0, 0};
+	pxP = &newPixMap;
+	return pxP;
 }	
 
 void pixMap_destroy (pixMap **p){
  //free all mallocs and put a zero pointer in *p
+	for (int i = 0; i < (*p)->imageHeight; i++) {
+		free(p[i]);
+	}
+	p = 0;
 }
 	
 pixMap *pixMap_read(char *filename,unsigned char arrayType){
@@ -22,20 +30,57 @@ pixMap *pixMap_read(char *filename,unsigned char arrayType){
   return 0;
 	}
  //allocate the 2-D rgba arrays
- 
+	
 	if (arrayType ==0){
-  //can only allocate for the number of rows - each row will be an array of MAXWIDTH
-  //copy each row of the image into each row
+		//can only allocate for the number of rows - each row will be an array of MAXWIDTH
+		//copy each row of the image into each row
+		/*
+		 * Allocate p->pixArray_arrays a number of bytes equal to sizeof(p->pixArray_arrays) * p->imageHeight.
+		 * Then, for each row (rgba[MAXWIDTH], position 0 <= i < p->imageHeight), 
+		 * initialize rgba structs from every 4 chars in p->image.
+		 */
+		if (p->imageWidth > MAXWIDTH) {
+			fprintf(stderr,"The image width is greater than MAXWIDTH");
+			return 0;
+		}
+		p->pixArray_arrays = malloc(sizeof(rgba[MAXWIDTH]) * p->imageHeight);
+		for (int i = 0; i < p->imageHeight; i++) {
+			for (int j = 0; j < p->imageWidth; j++) {
+				p->pixArray_arrays[i]->r = p->image[j * 4];
+				p->pixArray_arrays[i]->g = p->image[j * 4 + 1];
+				p->pixArray_arrays[i]->b = p->image[j * 4 + 2];
+				p->pixArray_arrays[i]->a = p->image[j * 4 + 3];
+			}
+		}
 	}	
 	else if (arrayType ==1){
 		//allocate a block of memory (dynamic array of p->imageHeight) to store the pointers
 		//use a loop allocate a block of memory for each row
-  //copy each row of the image into the newly allocated block
- }
+		//copy each row of the image into the newly allocated block
+		/*
+		 * Allocate p->pixArray-blocks a number of bytes equal to sizeof(rgba*) * p->imageHeight.
+		 * Then, for each row (rgba*, position 0 <= i < p->imageHeight), 
+		 * allocate a number of bytes equal to sizeof(rgba) * p->imageWidth and copy
+		 * rgba data into an rgba struct and add it the row p->imageWidth times.
+		 */
+		p->pixArray_blocks = malloc(sizeof(rgba*) * p->imageHeight);
+		for (int i = 0; i < p->imageHeight; i++) {
+			p->pixArray_blocks[i] = malloc(sizeof(rgba) * p->imageWidth);
+			for (int j = 0; j < p->imageWidth; j++) {
+				// Initialize local rgba struct from p->image data.
+				rgba newPix = {p->image[j * 4 + 0],
+					p->image[j * 4 + 1],
+					p->image[j * 4 + 2],
+					p->image[j * 4 + 3]};
+				p->pixArray_blocks[i][j] = newPix;
+			}
+		}
+	}
 	else if (arrayType ==2){
-  //allocate a block of memory (dynamic array of p->imageHeight) to store the pointers
-  //set the first pointer to the start of p->image
-  //each subsequent pointer is the previous pointer + p->imageWidth
+		//allocate a block of memory (dynamic array of p->imageHeight) to store the pointers
+		//set the first pointer to the start of p->image
+		//each subsequent pointer is the previous pointer + p->imageWidth
+		p->pixArray_overlay = malloc(sizeof(rgba*) * p->imageHeight);
 	}
 	else{
 		return 0;
