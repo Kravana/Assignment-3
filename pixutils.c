@@ -7,29 +7,42 @@ static pixMap* pixMap_copy(pixMap *p);
 
 static pixMap* pixMap_init(unsigned char arrayType){
 	//initialize everything to zero except arrayType
-	pixMap* pxP;
-	pixMap newPixMap = {0, 0, 0, arrayType, 0, 0, 0};
-	pxP = &newPixMap;
-	return pxP;
+	pixMap* pixM = malloc(sizeof(pixMap));
+	pixM->image = 0;
+	pixM->imageHeight = 0;
+	pixM->imageWidth = 0;
+	pixM->pixArray_arrays = NULL;
+	pixM->pixArray_blocks = NULL;
+	pixM->pixArray_overlay = NULL;
+	pixM->arrayType = arrayType;
+	return pixM;
 }	
 
 void pixMap_destroy (pixMap **p){
  //free all mallocs and put a zero pointer in *p
-	for (int i = 0; i < (*p)->imageHeight; i++) {
-		free(p[i]);
+	if ((*p)->arrayType == 0) {
+		free((*p)->pixArray_arrays);
+	} else if ((*p)->arrayType == 1) {
+		for (int i = 0; i < (*p)->imageHeight; i++) {
+			free((*p)->pixArray_blocks[i]);
+		}
+		free((*p)->pixArray_blocks);
+	} else if ((*p)->arrayType == 2) {
+		
 	}
-	p = 0;
+	free(*p);
+	p = NULL;
 }
 	
 pixMap *pixMap_read(char *filename,unsigned char arrayType){
- //library call reads in the image into p->image and sets the width and height
+	//library call reads in the image into p->image and sets the width and height
 	pixMap *p=pixMap_init(arrayType);
- int error;
- if((error=lodepng_decode32_file(&(p->image), &(p->imageWidth), &(p->imageHeight),filename))){
-  fprintf(stderr,"error %u: %s\n", error, lodepng_error_text(error));
-  return 0;
+	int error;
+	if((error=lodepng_decode32_file(&(p->image), &(p->imageWidth), &(p->imageHeight),filename))){
+	fprintf(stderr,"error %u: %s\n", error, lodepng_error_text(error));
+		return 0;
 	}
- //allocate the 2-D rgba arrays
+	//allocate the 2-D rgba arrays
 	
 	if (arrayType ==0){
 		//can only allocate for the number of rows - each row will be an array of MAXWIDTH

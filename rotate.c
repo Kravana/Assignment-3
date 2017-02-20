@@ -23,6 +23,7 @@ int main(int argc, char *argv[]){
 			i += 2;
 		} else if (!strcmp(argv[i], "-t")) {
 			arrayType = *argv[i + 1];
+			i += 2;
 		}
 		
 		else{
