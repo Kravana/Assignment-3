@@ -186,4 +186,4 @@ pixMap *pixMap_copy(pixMap *p){
 		}
 	}
 	return new;
-}	
+} 

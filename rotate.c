@@ -41,4 +41,3 @@ int main(int argc, char *argv[]){
 	pixMap_destroy(&p);
 	return 0;
 }
-
