@@ -28,7 +28,7 @@ void pixMap_destroy (pixMap **p){
 		}
 		free((*p)->pixArray_blocks);
 	} else if ((*p)->arrayType == 2) {
-		
+		free((*p)->pixArray_overlay[0]);
 	}
 	free(*p);
 	p = NULL;
@@ -59,10 +59,17 @@ pixMap *pixMap_read(char *filename,unsigned char arrayType){
 		p->pixArray_arrays = malloc(sizeof(rgba[MAXWIDTH]) * p->imageHeight);
 		for (int i = 0; i < p->imageHeight; i++) {
 			for (int j = 0; j < p->imageWidth; j++) {
-				p->pixArray_arrays[i]->r = p->image[j * 4 + 0];
-				p->pixArray_arrays[i]->g = p->image[j * 4 + 1];
-				p->pixArray_arrays[i]->b = p->image[j * 4 + 2];
-				p->pixArray_arrays[i]->a = p->image[j * 4 + 3];
+				rgba newPix = {p->image[(i * p->imageWidth * 4) + (j * 4) + 0],
+					p->image[(i * p->imageWidth * 4) + (j * 4) + 1],
+					p->image[(i * p->imageWidth * 4) + (j * 4) + 2],
+					p->image[(i * p->imageWidth * 4) + (j * 4) + 3]};
+				p->pixArray_arrays[i][j] = newPix;
+				printf("Row: %i: Col: %i - %i %i %i %i\n", 
+				i, j,
+				p->image[(i * p->imageWidth * 4) + (j * 4) + 0],
+					p->image[(i * p->imageWidth * 4) + (j * 4) + 1],
+					p->image[(i * p->imageWidth* 4) + (j * 4) + 2],
+					p->image[(i * p->imageWidth* 4) + (j * 4) + 3]);
 			}
 		}
 	}	
@@ -109,15 +116,13 @@ int pixMap_write(pixMap *p,char *filename){
 	//for arrayType 1 and arrayType 2 have to write out a controws  to the image using memcpy
 	if (p->arrayType ==0){
 		//have to copy each row of the array into the corresponding row of the image
-		for (int y = 0; y < p->imageHeight; y++) {
-			memcpy((rgba*) p->image + y * p->imageWidth, p->pixArray_arrays[y * p->imageWidth], sizeof(rgba) * p->imageWidth);
+		for (int i = 0; i < p->imageHeight; i++) {
+			memcpy(p->image + i * p->imageWidth * 4, p->pixArray_arrays + i, p->imageWidth * sizeof(rgba));
 		}
 	}	
 	else if (p->arrayType ==1){
 		//have to copy each row of the array into the corresponding row of the image		
-		for (int y = 0; y < p->imageHeight; y++) {
-			memcpy((rgba*) p->image + y * p->imageWidth, p->pixArray_blocks[y], sizeof(rgba) * p->imageWidth);
-		}
+		memcpy(p->image, p->pixArray_blocks, p->imageWidth * p->imageHeight * sizeof(rgba));
 	}
 	//library call to write the image out 
  if(lodepng_encode32_file(filename, p->image, p->imageWidth, p->imageHeight)){
@@ -161,14 +166,15 @@ pixMap *pixMap_copy(pixMap *p){
 	//allocate memory for new image of the same size a p->image and copy the image
 	new->imageHeight = p->imageHeight;
 	new->imageWidth = p->imageWidth;
-	new->image = malloc(new->imageWidth * new->imageHeight * sizeof(rgba));
+	new->image = malloc(p->imageWidth * p->imageHeight * sizeof(rgba));
 	memcpy(new->image, p->image, new->imageWidth * new->imageHeight * sizeof(rgba));
 	
 	//allocate memory and copy the arrays. 
 	if (new->arrayType ==0){
 		//insert code
-		new->pixArray_arrays = malloc(sizeof(rgba[MAXWIDTH]) * new->imageHeight);
-		memcpy(new->pixArray_arrays, p->pixArray_arrays, new->imageWidth * new->imageHeight * sizeof(rgba));
+		new->pixArray_arrays = malloc(sizeof(rgba[MAXWIDTH]) * p->imageHeight);
+		memcpy(new->pixArray_arrays, p->pixArray_arrays, sizeof(rgba[MAXWIDTH]) * p->imageHeight);
+		
 	}	
 	else if (new->arrayType ==1){
 		//insert code

@@ -9,7 +9,8 @@ int main(int argc, char *argv[]){
 	int i=1;
 	while (i<argc){
 		if(! strcmp(argv[i],"-i")){
-			inputfile=argv[i+1];
+			inputfile = malloc(strlen(argv[i + 1]));
+			sscanf(argv[i + 1], "%s", inputfile);
 			i+=2;
 		}	
 		//set up the rest of command-line parsing for the flags -o -r -t
@@ -22,7 +23,8 @@ int main(int argc, char *argv[]){
 			theta = atof(argv[i + 1]);
 			i += 2;
 		} else if (!strcmp(argv[i], "-t")) {
-			arrayType = *argv[i + 1];
+			//sscanf(argv[i + 1], "%c", &arrayType);
+			arrayType = atoi(argv[i + 1]);
 			i += 2;
 		}
 		
