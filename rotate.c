@@ -9,8 +9,7 @@ int main(int argc, char *argv[]){
 	int i=1;
 	while (i<argc){
 		if(! strcmp(argv[i],"-i")){
-			inputfile = malloc(strlen(argv[i + 1]));
-			sscanf(argv[i + 1], "%s", inputfile);
+			inputfile = argv[i + 1];
 			i+=2;
 		}	
 		//set up the rest of command-line parsing for the flags -o -r -t
